@@ -23,6 +23,7 @@ jobs:
           echo "repos<<EOF" >> $GITHUB_OUTPUT
           jq -s '[.[][]]' repos*.json >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          
       - name: "⏰ Set builddate"
         id: generate-builddate
         run: echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
@@ -160,7 +161,8 @@ jobs:
         run: |
           echo "PATH Variable: $PATH"
           make ${args}
-
+          make ${args} modules
+          
       - name: "💛 Upload Image"
         uses: actions/upload-artifact@v3
         env:
@@ -212,6 +214,16 @@ jobs:
           if [ -e "${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/Image.gz-dtb" ]; then
             cp -f ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/Image.gz-dtb ./AnyKernel3/
           fi
+
+          if [ -e "${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtbo.img" ]; then
+            cp -f ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtbo.img ./AnyKernel3/
+          fi
+
+          if [ -e "${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtb" ]; then
+            cp -f ${{ env.OUT_DIR }}/arch/${{ env.arch }}/boot/dtb ./AnyKernel3/
+          fi
+
+          find "${{ env.OUT_DIR }}/" -type f -iname '*.ko' -exec cp {} ./AnyKernel3/modules/system/lib/modules/ \;
 
           cd AnyKernel3/
           zip -q -r "${{ env.anykernel }}.zip" *
